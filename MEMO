@@ -1,0 +1,231 @@
+/etc/default/docker
+DOCKER_OPTS="-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --label node_type=manager"
+
+docker run --rm swarm create
+docker run -d swarm join --addr=172.17.8.102:2375 token://<CLUSTER_ID>
+docker run -d -p 2377:2375 swarm manage  token://<CLUSTER_ID>
+docker -H tcp://localhost:2377 info
+
+sudo docker -H tcp://0.0.0.0:2377 run --name jenkins -d -v /home/meteor/jenkins:/var/jenkins_home -e JAVA_OPTS='-Duser.timezone=Asia/Tokyo -Dfile.encoding=UTF-8 -
+Dsun.jnu.encoding=UTF-8' jenkins
+
+mkdir /docker_volumes
+docker -H tcp://0.0.0.0:2377 run -e constraint:node_type==manager --name upstreams -P -d redis
+
+
+## Dockerfile
+FROM ubuntu:trusty
+
+# Install Nginx.
+RUN apt-get update && \
+    apt-get -y install nginx-extras lua-nginx-redis && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN rm /etc/nginx/sites-enabled/default
+RUN chown -R www-data:www-data /var/lib/nginx
+
+# Define mountable directories.
+VOLUME ["/var/log/nginx"]
+
+# Define working directory.
+WORKDIR /etc/nginx
+
+# Define default command.
+CMD ["nginx", "-g", "daemon off;"]
+
+# Expose ports.
+EXPOSE 80 443
+
+
+
+docker -H tcp://0.0.0.0:2377 run -e constraint:node_type==manager --name dproxy -d -p 80:80 -p 443:443 -e DOCKER_NETWORK_ADDR=172.17.0.0 -v /docker_volumes/dproxy/nginx.conf:/etc/nginx/nginx.conf:ro -v /docker_volumes/dproxy/log:/var/log/nginx -d --link upstreams:redis drunkar/nginx-extras
+
+docker -H tcp://0.0.0.0:2377 inspect upstreams
+
+
+
+FROM python:3-onbuild
+CMD [ "python", "-u", "./linked.py" ]
+
+
+docker-py
+redis
+
+
+
+
+
+
+
+#!/usr/bin/python3
+
+import datetime
+import docker
+import json
+import os
+import redis
+import sys
+import urllib.request
+
+
+HOST_IP = os.getenv('HOST_IP')
+DOCKER_HOST = os.getenv('DOCKER_HOST')
+DOCKER_API_BASE_URL = 'tcp://' + DOCKER_HOST
+DOCKER_EVENT_API_URL = 'http://' + DOCKER_HOST + '/events'
+REDIS_ADDR = os.getenv('REDIS_PORT_6379_TCP_ADDR')
+REDIS_PORT = os.getenv('REDIS_PORT_6379_TCP_PORT')
+
+CLIENT = docker.Client(base_url=DOCKER_API_BASE_URL)
+EVENT = urllib.request.urlopen(DOCKER_EVENT_API_URL)
+REDIS = redis.Redis(host=REDIS_ADDR, port=REDIS_PORT)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#python
+def getforwardinfo(container):
+    inspect = CLIENT.inspect_container(container.get('Id'))
+    env = inspect.get('Config').get('Env')
+
+    name = next(filter(lambda x: 'DPROXY_FORWARD_NAME' in x, env), None)
+    if name is None:
+        return None
+    name = name.split('=').pop()
+
+    # if swarm manager node
+    if 'Node' in inspect:
+        nodeip = inspect.get('Node').get('Ip')
+
+        if nodeip != HOST_IP:
+            ipaddr = nodeip
+            port = '80'
+        else:
+            ipaddr = inspect.get('NetworkSettings').get('IPAddress')
+            port = str(container.get('Ports').pop().get('PrivatePort'))
+
+    else:
+        ipaddr = inspect.get('NetworkSettings').get('IPAddress')
+        port = str(container.get('Ports').pop().get('PrivatePort'))
+
+    forward = ipaddr + ':' + port
+    return (name, forward)
+
+
+def updateredis():
+    info = []
+    for c in CLIENT.containers():
+        tmp = getforwardinfo(c)        if tmp is None:
+            continue
+        info.append(tmp)
+
+    REDIS.flushall()
+    for name, forward in info:
+        REDIS.set(name, forward)
+
+
+def dumpredis():
+    print(datetime.datetime.now().ctime())
+    for k in REDIS.scan_iter():
+        s = "%10s:\t%s" % (k.decode('utf-8'), REDIS.get(k).decode('utf-8'))
+        print(s)
+
+
+def readevent():
+    x = []
+    bracket_count = 0
+    while True:
+        c = EVENT.read(1)
+        x.append(c)
+        if c == b'{':
+            bracket_count += 1
+        elif c == b'}':
+            bracket_count -= 1
+            if bracket_count == 0:
+                break
+    return b''.join(x).decode('utf-8')
+
+
+def main():
+    updateredis()
+    dumpredis()
+    while True:
+        ev = readevent()
+        status = json.loads(ev).get('status')
+        if status in ('start', 'stop'):
+            updateredis()
+            dumpredis()
+
+
+if __name__ == '__main__':
+    main()
+    exit(0)
+
+
+
+
+
+docker -H tcp://0.0.0.0:2377 run -e constraint:node_type==manager --name linked -d -v /docker_volumes/linked/linked.py:/linked.py --link upstreams:redis -e DOCKER_MANAGER_HOST_IP=192.168.100.11 -e DOCKER_HOST=172.17.42.1:2377 drunkar/linked-py
+sudo docker -H tcp://0.0.0.0:2377 run -e constraint:node_type==manager -d -P --name comet-blog-db -e MYSQL_ROOT_PASSWORD=cometpass mysql
+sudo docker -H tcp://0.0.0.0:2377 run -e constraint:node_type==manager -d -P --name foo -e DPROXY_FORWARD_NAME=comet-blog --link comet-blog-db:mysql wordpress
+sudo docker run --name linked_worker_1 -d -v /docker_volumes/linked/linked.py:/linked.py --link upstreams_worker_1:redis -e HOST_IP=192.168.100.12 -e DOCKER_HOST=172.17.42.1:2375 drunkar/linked-py
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         # local host = ngx.req.get_headers()["Host"]
+                # local match, error = ngx.re.match(host, "([a-z0-9]+)\\\\.home(:[0-9]+)?$", "i")
+                # if not match then
+                #     ngx.log(ngx.ERR, "match not found")
+                #     return ngx.exit(400)
+                # end
+                # local key = match[1]
+
+                # local redis = require "resty.redis"
+                # local red = redis:new()
+
+                # red:set_timeout(1000) -- 1 second
+
+                # local ok, err = red:connect("127.0.0.1", 6379)
+                # if not ok then
+                #     ngx.log(ngx.ERR, "failed to connect to redis: ", err)
+                #     return ngx.exit(500)
+                # end
+
+                # local host, err = red:get(key)
+                # if not host then
+                #     ngx.log(ngx.ERR, "failed to get redis key: ", err)
+                #     return ngx.exit(500)
+                # end
+
+                # if host == ngx.null then
+                #     ngx.log(ngx.ERR, "no host found for key ", key)
+                #     return ngx.exit(400)
+                # end

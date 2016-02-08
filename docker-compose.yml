@@ -1,0 +1,23 @@
+db:
+  image: mariadb:latest
+  container_name: db
+  ports:
+    - "3306:3306"
+  volumes:
+    - "/var/lib/mysql"
+  environment:
+    MYSQL_ROOT_PASSWORD: "root"
+    MYSQL_DATABASE: "laravel"
+
+redis:
+  image: redis:latest
+  container_name: redis
+  ports:
+    - "6379:6379"
+
+
+
+
+
+
+
