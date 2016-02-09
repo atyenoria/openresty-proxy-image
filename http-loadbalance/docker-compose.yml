@@ -1,9 +1,28 @@
 nginx:
-    build: ../
+    image: atyenoria/openresty-proxy
     container_name: nginx
     ports:
         - "80:80"
     tty: true
-    command: bash
+    working_dir: /opt/openresty/nginx/test
+    command: sh boot.sh
+    links:
+       - "app1:app1"
+       - "app2:app2"
     volumes:
     - ./config:/opt/openresty/nginx/test
+
+
+app1:
+    image: nginx
+    container_name: app1
+    ports:
+        - "80"
+
+
+
+app2:
+    image: nginx
+    container_name: app2
+    ports:
+        - "80"

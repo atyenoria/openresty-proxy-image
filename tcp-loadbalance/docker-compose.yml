@@ -4,6 +4,7 @@ nginx:
     ports:
         - "80:80"
     tty: true
-    command: bash
+    command: ls -la
+    working_dir: /opt/openresty/nginx/test
     volumes:
     - ./config:/opt/openresty/nginx/test

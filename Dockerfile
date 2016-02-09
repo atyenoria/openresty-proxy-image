@@ -21,6 +21,8 @@ RUN mkdir -p /opt/openresty/nginx/logs
 RUN touch /opt/openresty/nginx/logs/nginx.pid
 RUN echo "alias ngx=\"nginx -c /etc/nginx/nginx.conf\"" >> ~/.bashrc
 RUN echo "alias lso=\"lsof -i -n -P\"" >> ~/.bashrc
+RUN echo "alias ls=\"ls --color\"" >> ~/.bashrc
+RUN echo "alias l=\"ls -la\"" >> ~/.bashrc
 
 # COPY ./test /opt/openresty/nginx
 
