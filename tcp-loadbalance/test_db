@@ -1,0 +1,14 @@
+mysqlslap \
+  --user=root \
+  --password=root \
+  --host=l.com \
+  --port=3306 \
+  --engine=innodb \
+  --auto-generate-sql \
+  --auto-generate-sql-load-type=read \
+  --auto-generate-sql-add-autoincrement \
+  --number-char-cols=3 \
+  --number-int-cols=5 \
+  --number-of-queries=10000 \
+  --concurrency=3 \
+  --iterations=10

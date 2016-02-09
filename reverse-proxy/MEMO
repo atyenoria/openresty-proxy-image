@@ -1,0 +1,29 @@
+#! /bin/bash
+
+instancenames=(cm-test-micro cm-test-small cm-test-4xlarge cm-test-4xlarge-iops10000)
+loadtypes=(read write key update mixed)
+
+for loadtype in ${loadtypes[@]}; do
+  if [ "$loadtype" = "key" ]; then
+    numberofqueries=100000
+  else
+    numberofqueries=10000
+  fi
+  for instancename in ${instancenames[@]}; do
+    echo "======== ${loadtype} on ${instancename} (${numberofqueries} times) ========"
+    mysqlslap \
+      --user=classmethod \
+      --password=cmsamplepass \
+      --host=${instancename}.foobarbazqux.ap-northeast-1.rds.amazonaws.com \
+      --port=3306 \
+      --engine=innodb \
+      --auto-generate-sql \
+      --auto-generate-sql-load-type=${loadtype} \
+      --auto-generate-sql-add-autoincrement \
+      --number-char-cols=3 \
+      --number-int-cols=5 \
+      --number-of-queries=${numberofqueries} \
+      --concurrency=3 \
+      --iterations=10
+  done
+done

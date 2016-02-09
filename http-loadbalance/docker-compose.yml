@@ -5,24 +5,22 @@ nginx:
         - "80:80"
     tty: true
     working_dir: /opt/openresty/nginx/test
-    command: sh boot.sh
+    # command: sh boot.sh
+    command: bash
     links:
-       - "app1:app1"
-       - "app2:app2"
+       - "s1:s1"
+       - "s2:s2"
     volumes:
     - ./config:/opt/openresty/nginx/test
 
-
-app1:
+s1:
     image: nginx
-    container_name: app1
+    container_name: s1
     ports:
         - "80"
 
-
-
-app2:
+s2:
     image: nginx
-    container_name: app2
+    container_name: s2
     ports:
         - "80"

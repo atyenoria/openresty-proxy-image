@@ -5,7 +5,7 @@ nginx:
         - "3306:3306"
     tty: true
     working_dir: /opt/openresty/nginx/test
-    command: sh boot.sh
+    command: bash
     links:
        - "s1:s1"
        - "s2:s2"
@@ -14,24 +14,30 @@ nginx:
 
 
 s1:
-  image: mariadb
   container_name: s1
+  image: wordpress
+  links:
+    - db1:mysql
   ports:
-    - "3306"
-  volumes:
-    - "/var/lib/mysql"
+    - 8080:80
+db1:
+  image: mariadb
   environment:
-    MYSQL_ROOT_PASSWORD: "root"
-    MYSQL_DATABASE: "root"
+    MYSQL_ROOT_PASSWORD: example
+
+
 
 
 s2:
-  image: mariadb
   container_name: s2
+  image: wordpress
+  links:
+    - db2:mysql
   ports:
-    - "3306"
-  volumes:
-    - "/var/lib/mysql"
+    - 8090:80
+db2:
+  image: mariadb
   environment:
-    MYSQL_ROOT_PASSWORD: "root"
-    MYSQL_DATABASE: "root"
+    MYSQL_ROOT_PASSWORD: example
+
+
