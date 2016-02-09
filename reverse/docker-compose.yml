@@ -1,0 +1,9 @@
+nginx:
+    build: ../
+    container_name: nginx
+    ports:
+        - "80:80"
+    tty: true
+    command: bash
+    volumes:
+    - ./config:/opt/openresty/nginx/test
