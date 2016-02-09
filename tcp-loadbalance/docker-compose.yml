@@ -1,10 +1,9 @@
-db:
-  image: mariadb:latest
-  container_name: db
-  ports:
-    - "3306:3306"
-  volumes:
-    - "/var/lib/mysql"
-  environment:
-    MYSQL_ROOT_PASSWORD: "root"
-    MYSQL_DATABASE: "laravel"
+nginx:
+    build: ../
+    container_name: nginx
+    ports:
+        - "80:80"
+    tty: true
+    command: bash
+    volumes:
+    - ./config:/opt/openresty/nginx/test

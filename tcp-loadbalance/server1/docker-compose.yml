@@ -1,10 +1,11 @@
-resty:
-  image: mariadb:latest
+db:
+  image: mariadb
   container_name: db
+  command: mysqld
   ports:
     - "3306:3306"
   volumes:
     - "/var/lib/mysql"
   environment:
     MYSQL_ROOT_PASSWORD: "root"
-    MYSQL_DATABASE: "laravel"
+    MYSQL_DATABASE: "root"
