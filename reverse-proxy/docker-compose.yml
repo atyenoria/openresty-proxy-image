@@ -1,16 +1,24 @@
+# nginx:
+#     image: atyenoria/openresty-proxy
+#     container_name: nginx
+#     ports:
+#         - "3306:3306"
+#     tty: true
+#     working_dir: /opt/openresty/nginx/test
+#     command: bash
+#     links:
+#        - "s1:s1"
+#        - "s2:s2"
+#     volumes:
+#     - ./config:/opt/openresty/nginx/test
+
 nginx:
-    image: atyenoria/openresty-proxy
-    container_name: nginx
-    ports:
-        - "3306:3306"
-    tty: true
-    working_dir: /opt/openresty/nginx/test
-    command: bash
-    links:
-       - "s1:s1"
-       - "s2:s2"
-    volumes:
-    - ./config:/opt/openresty/nginx/test
+  image: jwilder/nginx-proxy
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock
+  ports:
+    - "80:80"
+
 
 
 s1:
@@ -18,8 +26,10 @@ s1:
   image: wordpress
   links:
     - db1:mysql
+  environment:
+    - VIRTUAL_HOST=l1.com
   ports:
-    - 8080:80
+    - "9090:80"
 db1:
   image: mariadb
   environment:
@@ -33,8 +43,10 @@ s2:
   image: wordpress
   links:
     - db2:mysql
+  environment:
+    - VIRTUAL_HOST=l.com
   ports:
-    - 8090:80
+    - "8080:80"
 db2:
   image: mariadb
   environment:

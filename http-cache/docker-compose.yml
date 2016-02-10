@@ -1,6 +1,63 @@
-redis:
-  image: redis:latest
-  container_name: redis
+nginx:
+    image: atyenoria/openresty-proxy
+    container_name: nginx
+    ports:
+        - "80:80"
+    tty: true
+    working_dir: /opt/openresty/nginx/test
+    # command: sh boot.sh
+    command: bash
+    links:
+       - "s1:s1"
+       # - "s2:s2"
+    volumes:
+    - ./config:/opt/openresty/nginx/test
+
+
+
+## wordpress
+s1:
+  container_name: s1
+  image: wordpress
+  links:
+    - db1:mysql
+  environment:
+    - VIRTUAL_HOST=l1.com
   ports:
-    - "6379:6379"
+    - "80"
+db1:
+  image: mariadb
+  environment:
+    MYSQL_ROOT_PASSWORD: example
+
+# s2:
+#   container_name: s2
+#   image: wordpress
+#   links:
+#     - db2:mysql
+#   environment:
+#     - VIRTUAL_HOST=l.com
+#   ports:
+#     - "80"
+# db2:
+#   image: mariadb
+#   environment:
+#     MYSQL_ROOT_PASSWORD: example
+
+
+
+
+
+# #wordpress
+# s1:
+#   container_name: s1
+#   image: nginx
+#   ports:
+#     - "80"
+
+# s2:
+#   container_name: s2
+#   image: nginx
+#   ports:
+#     - "80"
 
